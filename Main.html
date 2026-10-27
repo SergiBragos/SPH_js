@@ -19,6 +19,7 @@
     <script src="FluidHashGrid.js"></script>
     <script src="SPH/SPHParticle.js"></script>
     <script src="SPH/SPHSimulation.js"></script>
+
     <script>
       var canvas = document.getElementById("canvas");
       var ctx = canvas.getContext("2d");
@@ -35,8 +36,8 @@
 
       function updateSimulation(){
         Clear();
-        sphSimulation.update()
-        sphSimulation.draw()
+        sphSimulation.update();
+        sphSimulation.draw();
       }
 
       function mainLoop(){
@@ -45,7 +46,7 @@
       }
 
       function Clear(){
-        ctx.fillStyle = "#242321"
+        ctx.fillStyle = "#242321";
         ctx.fillRect(0,0,canvas.width, canvas.height);
       }
     </script>
