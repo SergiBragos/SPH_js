@@ -7,6 +7,7 @@ class SPHParticle{
     this.mass = mass;
     this.force = Vector2.Zero();
     this.color = color;
+    this.defaultColor = color;
     this.isBoundary = false;
 
     this.colorField = 0;

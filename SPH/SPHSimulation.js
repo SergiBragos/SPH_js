@@ -104,7 +104,7 @@ class SPHSimulation{
       let pi = this.particles[i];
       pi.colorField = 0;
 
-      for(let j = 0; j < this.particles.length[j]; j++){
+      for(let j = 0; j < this.particles.length; j++){
         let pj = this.particles[j];
 
         let rij = Sub(pi.position, pj.position);
@@ -131,12 +131,12 @@ class SPHSimulation{
           if(r > 0){
             //Calculem el vector força que genera el gradient de pressió (escalar --> vector)!
             let pressureTerm = - pj.mass * (pi.pressure + pj.pressure) / (2 * pj.density);
-            let spikyGradient = Kernel.polyGradient(rij, this.INTERACTION_RADIUS);
+            let spikyGradient = Kernel.spikyGradient(rij, this.INTERACTION_RADIUS);
             let pressureForce = Scale(spikyGradient, pressureTerm);
             pi.force = Add(pi.force, pressureForce);
 
             //Calculem el vector normal a la superfície del fluid. Ho fem aquí per evitar recórrer totes les partícules de nou.
-            let gradientColorField = Kernel.spikyGradient(rij, this.INTERACTION_RADIUS);
+            let gradientColorField = Kernel.polyGradient(rij, this.INTERACTION_RADIUS);
             normal = Add(normal, Scale(gradientColorField, pj.mass / pj.density));
           }
         }
