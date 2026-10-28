@@ -17,7 +17,7 @@ class Kernel{
       let h2 = h * h;
       let r2 = r * r;
       let k = -24/(Math.PI * Math.pow(h, 8));
-      factor = k * Math.pow(h2 - r2, 2);
+      let factor = k * Math.pow(h2 - r2, 2);
       return Scale(rij, factor);
     }
     else{

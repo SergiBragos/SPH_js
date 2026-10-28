@@ -9,17 +9,17 @@ class SPHSimulation{
 
     //Propietats de les partícules
     this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.003; // = 0.003
+    this.REST_DENSITY = 0.005; // = 0.003
     this.K_STIFFNESS = 2; //Només útil si es fa servir fórmula de pressió de Tait. = 2
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.K_STIFFNESS_LINEAR = 10; // Només útil si es fa servir fórmula de pressió lineal
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
-    this.SURFACE_TENSION_COEFFICIENT = 0.5;
+    this.SURFACE_TENSION_COEFFICIENT = 0.2;
 
     this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar.
     this.REBOUND_COEFF = 0.2;
     //Més paràmetres que afegirem després
-    this.GRAVITY = new Vector2(0, 0.03);
+    this.GRAVITY = new Vector2(0, 0.05);
 
     this.instantiateParticles();
     //this.instantiateBoundaryParticles();
@@ -148,10 +148,10 @@ class SPHSimulation{
   }
 
 	computeSurfaceTension(){
-		for(let i = 0; i < this.particles.length;i++){
+		for(let i = 0; i < this.particles.length; i++){
 			this.particles[i].color = this.particles[i].defaultColor;
 		}
-		for(let i = 0; i < this.particles.length;i++){
+		for(let i = 0; i < this.particles.length; i++){
 			//console.log(this.particles[i].surfaceNormal.Length2());
 			if(this.particles[i].surfaceNormal.Length2() > 0.0001){
 				// remove this line to disable surface particle coloring
