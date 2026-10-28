@@ -11,18 +11,20 @@ class SPHSimulation{
     this.K_STIFFNESS = 2; //Només útil si es fa servir fórmula de pressió de Tait
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait
     this.K_STIFFNESS_LINEAR = 10; // Només útil si es fa servir fórmula de pressió lineal
+    this.XSPH_EPSILON = 0.2 //Coeficient de viscositat
 
-    this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar.
+    this.VELOCITY_DAMPING = 0.995; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar.
     this.REBOUND_COEFF = 0.5;
     //Més paràmetres que afegirem després
-    this.GRAVITY = new Vector2(0, 0.01);
+    this.GRAVITY = new Vector2(0, 0.02);
 
     this.instantiateParticles();
+    this.instantiateBoundaryParticles();
   }
 
   instantiateParticles(){
     let offsetBetweenParticles = 14;
-    let offsetAllParticles = new Vector2(400, 150);
+    let offsetAllParticles = new Vector2(14, 150);
 
     let xparticles = Math.sqrt(this.AMOUNT_PARTICLES);
     let yparticles = xparticles;
@@ -37,11 +39,35 @@ class SPHSimulation{
     //console.log("Current amount of particles: " + this.particles.length);
   }
 
+	instantiateBoundaryParticles(){
+		let offsetBetweenParticles = 14;
+
+		// bottom boundary
+		for(let x=0; x<canvas.width; x+=offsetBetweenParticles){
+			this.particles.push(new SPHParticle(new Vector2(x,canvas.height)));
+			this.particles[this.particles.length-1].isBoundary = true;
+		}
+
+		// left boundary
+		for(let y=0; y<canvas.height; y+=offsetBetweenParticles){
+			this.particles.push(new SPHParticle(new Vector2(0,y)));
+			this.particles[this.particles.length-1].isBoundary = true;
+		}
+
+		// right boundary
+		for(let y=0; y<canvas.height; y+=offsetBetweenParticles){
+			this.particles.push(new SPHParticle(new Vector2(canvas.width,y)));
+			this.particles[this.particles.length-1].isBoundary = true;
+		}
+	}
+
   update(){
-    this.computeDensityPressure();
-    this.computeForces();
-    this.integrate();
-    this.worldBoundary();
+    this.computeDensityPressure(); //Calculem la pressió estàtica a tots els punts on hi ha una partícula.
+    this.computeForces(); //Calculem les forces de pressió entre les parelles de partícules.
+    this.applyXSPH(); //Calculem la força de viscositat per diferències de velocitat.
+    this.integrate(); //Calculem les noves velocitats i posicions de les partícules.
+    this.worldBoundary(); //Calculem rebots amb les parets.
+    //Després de totes aquestes sub-funcions es crida la funció draw des del main.
   }
 
   computeDensityPressure(){
@@ -50,14 +76,10 @@ class SPHSimulation{
       pi.density = 0;
 
       for(let j=0; j < this.particles.length; j++){
-        if(i==j){
-          continue; // TODO: Mirar si està bé que la densitat de la partícula pròpia no computi per al punt on es troba. En teoria per simetria no hauria de canviar res per a la pròpia partícula.
-        } else{
-          let pj = this.particles[j];
-          let rij = Sub(pi.position, pj.position);
-          let r = rij.Length();
-          pi.density += pj.mass * Kernel.poly(r, this.INTERACTION_RADIUS);
-        }
+        let pj = this.particles[j];
+        let rij = Sub(pi.position, pj.position);
+        let r = rij.Length();
+        pi.density += pj.mass * Kernel.poly(r, this.INTERACTION_RADIUS);
       }
       //console.log("Density of particle " + i + ": " + pi.density);
 
@@ -96,9 +118,15 @@ class SPHSimulation{
     }
   }
 
+  applyXSPH(){
+    
+  }
+
   integrate(){
 		for(let i = 0; i < this.particles.length; i++){
 			let pi = this.particles[i];
+
+      if(pi.isBoundary) continue; //Serveix per què les partícules de la paret no siguin mòbils.
 
 			let acceleration = Scale(pi.force, 1.0/pi.density);
 			pi.velocity = Add(pi.velocity, Scale(acceleration, this.DELTA_TIME));
@@ -132,15 +160,20 @@ class SPHSimulation{
 			}
 
 			// make sure particles stay in the world
-			// pi.position.x = Math.max(0, Math.min(canvas.width, pi.position.x));
-			// pi.position.y = Math.max(0, Math.min(canvas.height, pi.position.y));
+			pi.position.x = Math.max(0, Math.min(canvas.width, pi.position.x));
+			pi.position.y = Math.max(0, Math.min(canvas.height, pi.position.y));
 		}
 	}
 
   draw(){
     for(let i=0; i<this.particles.length;i++){
       let pos = this.particles[i].position; //La posició de la partícula "i" de la llita
-      DrawUtils.drawPoint(pos, 3, this.particles[i].color);
+      if(this.particles[i]. isBoundary){
+        DrawUtils.drawPoint(pos, 3, "#3e3e3e");
+
+      }else{
+        DrawUtils.drawPoint(pos, 3, this.particles[i].color);
+      }
     }
   }
 }
