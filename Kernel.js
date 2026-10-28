@@ -11,6 +11,19 @@ class Kernel{
     }
   }
 
+  static polyGradient(rij, h){
+    let r = rij.Length();
+    if(r >= 0 && r < h){
+      let h2 = h * h;
+      let r2 = r * r;
+      let k = -24/(Math.PI * Math.pow(h, 8));
+      return k * Math.pow(h2 - r2, 2);
+    }
+    else{
+      return 0;
+    }    
+  }
+
   static spikyGradient(rij, h){
     let r = rij.Length();
     if (r > 0 && r < h){

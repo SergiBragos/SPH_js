@@ -8,5 +8,8 @@ class SPHParticle{
     this.force = Vector2.Zero();
     this.color = color;
     this.isBoundary = false;
+
+    this.colorField = 0;
+    this.surfaceNormal = Vector2.Zero();
   }
 }

@@ -12,8 +12,7 @@
   </head>
   
   <body>
-    <canvas id="canvas-left" width="600px" height="600px" style="border: solid 2px black"></canvas>
-    <canvas id="canvas-right" width="600px" height="600px" style="border: solid 2px black"></canvas>
+    <canvas id="canvas" width="900px" height="600px" style="border: solid 2px black"></canvas>
     <script src="Kernel.js"></script>
     <script src="Vector2.js"></script>
     <script src="DrawUtils.js"></script>
@@ -22,12 +21,10 @@
     <script src="SPH/SPHSimulation.js"></script>
 
     <script>
-      var canvas = document.getElementById("canvas-left");
-      //var canvas2 = document.getElementById("canvas-right");
+      var canvas = document.getElementById("canvas");
       var ctx = canvas.getContext("2d");
-      //var ctx2 = canvas2.getContext("2d");
 
-      let sphSimulation = new SPHSimulation();
+      let sphSimulation = new SPHSimulation(canvas, ctx, viscositat = 0.2);
       //let sphSimulation = new PCISPHSimulation();
       //let sphSimulation = new IISPHSimulation();
       //let sphSimulation = new DFSPHSimulation();
@@ -50,9 +47,7 @@
 
       function Clear(){
         ctx.fillStyle = "#242321";
-        //ctx2.fillStyle = "#242321";
         ctx.fillRect(0,0,canvas.width, canvas.height);
-        //ctx2.fillRect(0,0,canvas2.width, canvas2.height);
       }
     </script>
   </body>

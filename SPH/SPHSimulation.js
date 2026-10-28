@@ -1,22 +1,25 @@
 class SPHSimulation{
-  constructor(){
+  constructor(canvas, ctx, viscositat = 0.2){
     
+    this.canvas = canvas;
+    this.ctx = ctx;
     this.particles = []
     this.AMOUNT_PARTICLES = 600;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
     this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.005; // = 0.003
+    this.REST_DENSITY = 0.003; // = 0.003
     this.K_STIFFNESS = 2; //Només útil si es fa servir fórmula de pressió de Tait. = 2
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.K_STIFFNESS_LINEAR = 10; // Només útil si es fa servir fórmula de pressió lineal
-    this.XSPH_EPSILON = 0.8 //Coeficient de viscositat. = 0.2
+    this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
+    this.SURFACE_TENSION_COEFFICIENT = 0.5;
 
     this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar.
-    this.REBOUND_COEFF = 0.5;
+    this.REBOUND_COEFF = 0.2;
     //Més paràmetres que afegirem després
-    this.GRAVITY = new Vector2(0, 0.05);
+    this.GRAVITY = new Vector2(0, 0.03);
 
     this.instantiateParticles();
     //this.instantiateBoundaryParticles();
@@ -65,7 +68,9 @@ class SPHSimulation{
 
   update(){
     this.computeDensityPressure(); //Calculem la pressió estàtica a tots els punts on hi ha una partícula.
+    this.computeColorField(); 
     this.computeForces(); //Calculem les forces de pressió entre les parelles de partícules.
+    this.computeSurfaceTension(); //Sumar la força de tensió superficial al vector de força de cada partícula.
     this.applyXSPH(); //Calculem la força de viscositat per diferències de velocitat.
     this.integrate(); //Calculem les noves velocitats i posicions de les partícules.
     this.worldBoundary(); //Calculem rebots amb les parets.
@@ -94,9 +99,26 @@ class SPHSimulation{
     }
   }
 
+  computeColorField(){
+    for(let i = 0; i < this.particles.length; i++){
+      let pi = this.particles[i];
+      pi.colorField = 0;
+
+      for(let j = 0; j < this.particles.length[j]; j++){
+        let pj = this.particles[j];
+
+        let rij = Sub(pi.position, pj.position);
+        let r = rij.Length();
+
+        pi.colorField += Kernel.poly(r, this.INTERACTION_RADIUS) * pj.mass / pj.density;
+      }
+    }
+  }
+
   computeForces(){
     for(let i = 0; i < this.particles.length; i++){
       let pi = this.particles[i];
+      let normal = Vector2.Zero();
       pi.force = Vector2.Zero();
 
       for(let j = 0; j < this.particles.length; j++){
@@ -109,16 +131,38 @@ class SPHSimulation{
           if(r > 0){
             //Calculem el vector força que genera el gradient de pressió (escalar --> vector)!
             let pressureTerm = - pj.mass * (pi.pressure + pj.pressure) / (2 * pj.density);
-            let spikyGradient = Kernel.spikyGradient(rij, this.INTERACTION_RADIUS);
+            let spikyGradient = Kernel.polyGradient(rij, this.INTERACTION_RADIUS);
             let pressureForce = Scale(spikyGradient, pressureTerm);
             pi.force = Add(pi.force, pressureForce);
+
+            //Calculem el vector normal a la superfície del fluid. Ho fem aquí per evitar recórrer totes les partícules de nou.
+            let gradientColorField = Kernel.spikyGradient(rij, this.INTERACTION_RADIUS);
+            normal = Add(normal, Scale(gradientColorField, pj.mass / pj.density));
           }
         }
       }
+      pi.surfaceNormal = normal.Cpy();
       // Sumem la força de la gravetat al final de cada partícula
       pi.force = Add(pi.force, this.GRAVITY);
     }
   }
+
+	computeSurfaceTension(){
+		for(let i = 0; i < this.particles.length;i++){
+			this.particles[i].color = this.particles[i].defaultColor;
+		}
+		for(let i = 0; i < this.particles.length;i++){
+			//console.log(this.particles[i].surfaceNormal.Length2());
+			if(this.particles[i].surfaceNormal.Length2() > 0.0001){
+				// remove this line to disable surface particle coloring
+				this.particles[i].color = "red";
+
+				let surfaceTensionForce = Scale(this.particles[i].surfaceNormal, this.SURFACE_TENSION_COEFFICIENT);
+				this.particles[i].force = Add(this.particles[i].force, surfaceTensionForce);
+
+			}
+		}
+	}
 
   applyXSPH(){
     for(let i = 0; i < this.particles.length; i++){
