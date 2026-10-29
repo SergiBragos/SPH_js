@@ -60,10 +60,20 @@
 
         <h2>Controls</h2>
 
+        <button id="reset-simulation" type="button">
+          Reinicia la simulació
+        </button>
+
+        <label>
+          Partícules de paret
+          <input id="boundary-particles" type="checkbox">
+          <output id="boundary-particles-value"></output>
+        </label>
+
         <label>
           Gravetat
           <input id="gravity" type="checkbox">
-          <output id="gravity-on"></output>
+          <output id="gravity-check"></output>
         </label>
 
         <label>
@@ -122,7 +132,43 @@
       const energyDisplay = document.getElementById("energy");
       const colorModeSelect = document.getElementById("color-mode");
 
-      const sphSimulation = new SPHSimulation(canvas, ctx, 1.2);
+      const gravityInput = document.getElementById("gravity");
+      const gravityOutput = document.getElementById("gravity-check");
+
+      function updateGravityControl() {
+        sphSimulation.GRAVITY_ENABLED = gravityInput.checked;
+        gravityOutput.textContent = gravityInput.checked
+          ? "Activada"
+          : "Desactivada";
+      }
+
+      gravityInput.checked = sphSimulation.GRAVITY_ENABLED;
+      gravityInput.addEventListener("change", updateGravityControl);
+      updateGravityControl();
+
+      const boundaryParticlesInput = document.getElementById("boundary-particles");
+
+      const boundaryParticlesOutput = document.getElementById("boundary-particles-value");
+
+      const resetButton = document.getElementById("reset-simulation");
+
+      function updateBoundaryParticlesControl() {
+        sphSimulation.useBoundaryParticles = boundaryParticlesInput.checked;
+
+        boundaryParticlesOutput.textContent = boundaryParticlesInput.checked
+          ? "Activades en reiniciar"
+          : "Desactivades en reiniciar";
+      }
+
+      boundaryParticlesInput.checked = sphSimulation.useBoundaryParticles;
+
+      boundaryParticlesInput.addEventListener("change", updateBoundaryParticlesControl);
+
+      resetButton.addEventListener("click", () => {sphSimulation.reset();});
+
+      updateBoundaryParticlesControl();
+
+      const sphSimulation = new SPHSimulation(canvas, ctx, 0.2);
 
       function bindRange(inputId, outputId, property) {
         const input = document.getElementById(inputId);

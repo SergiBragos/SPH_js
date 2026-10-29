@@ -18,17 +18,30 @@ class SPHSimulation{
 
     this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
     this.REBOUND_COEFF = 0.2;
-    //Més paràmetres que afegirem després
+
     this.GRAVITY = new Vector2(0, 0.05);
+    this.GRAVITY_ENABLED = true;
+    this.useBoundaryParticles = true;
 
     this.fluidHashGrid = new FluidHashGrid(this.INTERACTION_RADIUS);
 
-    this.instantiateParticles();
-    this.fluidHashGrid.initialize(this.particles);
-    this.instantiateBoundaryParticles();
+    this.reset();
 
     this.colorMode = "viscosity"; // Mode de representació del color de la partícula. Opcions: 
 
+  }
+
+  reset() {
+    this.particles = [];
+
+    this.instantiateParticles();
+
+    if (this.useBoundaryParticles) {
+      this.instantiateBoundaryParticles();
+    }
+
+    this.fluidHashGrid.initialize(this.particles);
+    this.neighborSearch();
   }
 
   instantiateParticles(){
@@ -160,7 +173,9 @@ class SPHSimulation{
       }
       pi.surfaceNormal = normal.Cpy();
       // Sumem la força de la gravetat al final de cada partícula
+      if (this.GRAVITY_ENABLED && !pi.isBoundary) {
       pi.force = Add(pi.force, this.GRAVITY);
+      }
     }
   }
 
