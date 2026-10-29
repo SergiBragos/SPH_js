@@ -4,7 +4,7 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 600;
+    this.AMOUNT_PARTICLES = 1600;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
@@ -21,7 +21,10 @@ class SPHSimulation{
     //Més paràmetres que afegirem després
     this.GRAVITY = new Vector2(0, 0.05);
 
+    this.fluidHashGrid = new FluidHashGrid(this.INTERACTION_RADIUS);
+
     this.instantiateParticles();
+    this.fluidHashGrid.initialize(this.particles);
     //this.instantiateBoundaryParticles();
   }
 
@@ -67,6 +70,7 @@ class SPHSimulation{
 	}
 
   update(){
+    this.neighborSearch(); //Esborra la xarxa de veïns i la torna a fer abans de calcular res del pas.
     this.computeDensityPressure(); //Calculem la pressió estàtica a tots els punts on hi ha una partícula.
     this.computeColorField(); 
     this.computeForces(); //Calculem les forces de pressió entre les parelles de partícules.
@@ -77,13 +81,19 @@ class SPHSimulation{
     //Després de totes aquestes sub-funcions es crida la funció draw des del main. Draw només agafa les posicions noves de les partícules.
   }
 
+  neighborSearch(){
+    this.fluidHashGrid.clearGrid();
+    this.fluidHashGrid.mapParticlesToCell();
+  }
+
   computeDensityPressure(){
     for(let i=0; i < this.particles.length; i++){
       let pi = this.particles[i];
       pi.density = 0;
 
-      for(let j=0; j < this.particles.length; j++){
-        let pj = this.particles[j];
+      let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
+      for(let j=0; j < neighbours.length; j++){
+        let pj = neighbours[j];
         let rij = Sub(pi.position, pj.position);
         let r = rij.Length();
         pi.density += pj.mass * Kernel.poly(r, this.INTERACTION_RADIUS);
@@ -104,9 +114,10 @@ class SPHSimulation{
       let pi = this.particles[i];
       pi.colorField = 0;
 
-      for(let j = 0; j < this.particles.length; j++){
-        let pj = this.particles[j];
-
+      let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
+      
+      for(let j=0; j < neighbours.length; j++){
+        let pj = neighbours[j];
         let rij = Sub(pi.position, pj.position);
         let r = rij.Length();
 
@@ -120,10 +131,10 @@ class SPHSimulation{
       let pi = this.particles[i];
       let normal = Vector2.Zero();
       pi.force = Vector2.Zero();
-
-      for(let j = 0; j < this.particles.length; j++){
-        let pj = this.particles[j];
-
+      let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
+      
+      for(let j=0; j < neighbours.length; j++){
+        let pj = neighbours[j];
         if(pi !== pj){
           let rij = Sub(pi.position, pj.position);
           let r = rij.Length();
@@ -169,9 +180,11 @@ class SPHSimulation{
       let pi = this.particles[i];
       if(pi.isBoundary) continue;
       let deltaV = Vector2.Zero();
-
-      for(let j = 0; j < this.particles.length; j++){
-        let pj = this.particles[j];
+      
+      let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
+      for(let j=0; j < neighbours.length; j++){
+        let pj = neighbours[j];
+        
         let rij = Sub(pj.position, pi.position);
         let r = rij.Length();
 
