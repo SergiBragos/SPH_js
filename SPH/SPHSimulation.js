@@ -4,7 +4,7 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 3000;
+    this.AMOUNT_PARTICLES = 2500;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
@@ -25,12 +25,12 @@ class SPHSimulation{
 
     this.instantiateParticles();
     this.fluidHashGrid.initialize(this.particles);
-    //this.instantiateBoundaryParticles();
+    this.instantiateBoundaryParticles();
   }
 
   instantiateParticles(){
-    let offsetBetweenParticles = 10;
-    let offsetAllParticles = new Vector2(14, 14);
+    let offsetBetweenParticles = 14;
+    let offsetAllParticles = new Vector2(this.INTERACTION_RADIUS, 14);
 
     let xparticles = Math.sqrt(this.AMOUNT_PARTICLES);
     let yparticles = xparticles;
@@ -46,7 +46,7 @@ class SPHSimulation{
   }
 
 	instantiateBoundaryParticles(){
-		let offsetBetweenParticles = 10;
+		let offsetBetweenParticles = 8;
 		// paret inferior
 		for(let x=0; x<canvas.width; x+=offsetBetweenParticles){
 			this.particles.push(new SPHParticle(new Vector2(x,canvas.height)));
