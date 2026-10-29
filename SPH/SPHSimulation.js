@@ -4,7 +4,7 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 2500;
+    this.AMOUNT_PARTICLES = 1500;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
@@ -26,6 +26,9 @@ class SPHSimulation{
     this.instantiateParticles();
     this.fluidHashGrid.initialize(this.particles);
     this.instantiateBoundaryParticles();
+
+    this.colorMode = "viscosity"; // Mode de representació del color de la partícula. Opcions: 
+
   }
 
   instantiateParticles(){
@@ -46,7 +49,7 @@ class SPHSimulation{
   }
 
 	instantiateBoundaryParticles(){
-		let offsetBetweenParticles = 8;
+		let offsetBetweenParticles = 6;
 		// paret inferior
 		for(let x=0; x<canvas.width; x+=offsetBetweenParticles){
 			this.particles.push(new SPHParticle(new Vector2(x,canvas.height)));
@@ -78,6 +81,7 @@ class SPHSimulation{
     this.applyXSPH(); //Calculem la força de viscositat per diferències de velocitat.
     this.integrate(); //Calculem les noves velocitats i posicions de les partícules.
     this.worldBoundary(); //Calculem rebots amb les parets.
+    this.updateParticleColors(); //Calculem els colors de les partícules segons la categoria seleccionada.
     //Després de totes aquestes sub-funcions es crida la funció draw des del main. Draw només agafa les posicions noves de les partícules.
   }
 
@@ -131,6 +135,7 @@ class SPHSimulation{
       let pi = this.particles[i];
       let normal = Vector2.Zero();
       pi.force = Vector2.Zero();
+      pi.pressureForce = Vector2.Zero();
       let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
       
       for(let j=0; j < neighbours.length; j++){
@@ -144,6 +149,7 @@ class SPHSimulation{
             let pressureTerm = - pj.mass * (pi.pressure + pj.pressure) / (2 * pj.density);
             let spikyGradient = Kernel.spikyGradient(rij, this.INTERACTION_RADIUS);
             let pressureForce = Scale(spikyGradient, pressureTerm);
+            pi.pressureForce = Add(pi.pressureForce, pressureForce);
             pi.force = Add(pi.force, pressureForce);
 
             //Calculem el vector normal a la superfície del fluid. Ho fem aquí per evitar recórrer totes les partícules de nou.
@@ -158,27 +164,24 @@ class SPHSimulation{
     }
   }
 
-	computeSurfaceTension(){
-		for(let i = 0; i < this.particles.length; i++){
-			this.particles[i].color = this.particles[i].defaultColor;
-		}
-		for(let i = 0; i < this.particles.length; i++){
-			//console.log(this.particles[i].surfaceNormal.Length2());
-			if(this.particles[i].surfaceNormal.Length2() > 0.0001){
-				// remove this line to disable surface particle coloring
-				this.particles[i].color = "red";
+  computeSurfaceTension() {
+    for (const particle of this.particles) {
+      if (particle.surfaceNormal.Length2() > 0.0001) {
+        const surfaceTensionForce = Scale(
+          particle.surfaceNormal,
+          this.SURFACE_TENSION_COEFFICIENT
+        );
 
-				let surfaceTensionForce = Scale(this.particles[i].surfaceNormal, this.SURFACE_TENSION_COEFFICIENT);
-				this.particles[i].force = Add(this.particles[i].force, surfaceTensionForce);
-
-			}
-		}
-	}
+        particle.force = Add(particle.force, surfaceTensionForce);
+      }
+    }
+  }
 
   applyXSPH(){
     for(let i = 0; i < this.particles.length; i++){
       let pi = this.particles[i];
-      if(pi.isBoundary) continue;
+      pi.viscosityDeltaVelocity = Vector2.Zero();
+      if(pi.isBoundary) continue; // Si és frontera no actualitzem res de viscositat ja que no es mou.
       let deltaV = Vector2.Zero();
       
       let neighbours = this.fluidHashGrid.getNeighbourOfParticleIdx(i);
@@ -195,7 +198,8 @@ class SPHSimulation{
           deltaV = Add(deltaV, contribution);
         }
       }
-      pi.velocity = Add(pi.velocity, Scale(deltaV, this.XSPH_EPSILON));
+      pi.viscosityDeltaVelocity = Scale(deltaV, this.XSPH_EPSILON);
+      pi.velocity = Add(pi.velocity, pi.viscosityDeltaVelocity);
     }
   }
 
@@ -262,5 +266,81 @@ class SPHSimulation{
     }
 
     return energy;
+  }
+
+  isSurfaceParticle(particle) {
+    return particle.surfaceNormal.Length2() > 0.0001;
+  }
+
+  getHeatColor(value, minValue, maxValue) {
+    const range = maxValue - minValue;
+    const normalized = range === 0 ? 0 : (value - minValue) / range;
+    const t = Math.max(0, Math.min(1, normalized));
+
+    let red;
+    let green;
+    let blue;
+
+    if (t < 0.5) {
+      const localT = t * 2;
+      red = Math.round(255 * localT);
+      green = Math.round(255 * localT);
+      blue = Math.round(255 * (1 - localT));
+    } else {
+      const localT = (t - 0.5) * 2;
+      red = 255;
+      green = Math.round(255 * (1 - localT));
+      blue = 0;
+    }
+
+    return `rgb(${red}, ${green}, ${blue})`;
+  }
+
+  updateParticleColors() {
+    const fluidParticles = this.particles.filter(
+      particle => !particle.isBoundary
+    );
+
+    if (this.colorMode === "surface") {
+      for (const particle of fluidParticles) {
+        particle.color = this.isSurfaceParticle(particle)
+          ? "red"
+          : particle.defaultColor;
+      }
+
+      return;
+    }
+
+    function getValue(particle, mode) {
+      if (mode === "velocity") {
+        return particle.velocity.Length();
+      }
+
+      if (mode === "density") {
+        return particle.density;
+      }
+
+      if (mode === "pressureForce") {
+        return particle.pressureForce.Length();
+      }
+
+      if (mode === "viscosity") {
+        return particle.viscosityDeltaVelocity.Length();
+      }
+
+      return 0;
+    }
+
+    const values = fluidParticles.map(particle =>
+      getValue(particle, this.colorMode)
+    );
+
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+
+    for (const particle of fluidParticles) {
+      const value = getValue(particle, this.colorMode);
+      particle.color = this.getHeatColor(value, minValue, maxValue);
+    }
   }
 }

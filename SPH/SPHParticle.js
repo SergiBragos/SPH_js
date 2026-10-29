@@ -10,7 +10,12 @@ class SPHParticle{
     this.defaultColor = color;
     this.isBoundary = false;
 
+    //Paràmetres de la tensió superficial
     this.colorField = 0;
     this.surfaceNormal = Vector2.Zero();
+
+    //Per a la representació dels paràmetres.
+    this.pressureForce = Vector2.Zero();
+    this.viscosityDeltaVelocity = Vector2.Zero();
   }
 }

@@ -56,9 +56,15 @@
 
       <aside class="panel">
         <h2>Mesures</h2>
-        <p>Energia: <output id="energy">0</output></p>
+        <p>Energia: <output id="energy">0</output> unitats</p>
 
         <h2>Controls</h2>
+
+        <label>
+          Gravetat
+          <input id="gravity" type="checkbox">
+          <output id="gravity-on"></output>
+        </label>
 
         <label>
           Viscositat
@@ -68,13 +74,13 @@
 
         <label>
           Densitat de repòs
-          <input id="rest-density" type="range" min="0.001" max="0.01" step="0.0005">
+          <input id="rest-density" type="range" min="0.003" max="0.01" step="0.0005">
           <output id="rest-density-value"></output>
         </label>
 
         <label>
           K stiffness
-          <input id="stiffness" type="range" min="0" max="20" step="0.1">
+          <input id="stiffness" type="range" min="0" max="20" step="0.5">
           <output id="stiffness-value"></output>
         </label>
 
@@ -93,11 +99,11 @@
         <h2>Color de les partícules</h2>
 
         <select id="color-mode">
-          <option value="surface">Superfície</option>
           <option value="velocity">Velocitat</option>
           <option value="density">Densitat</option>
           <option value="pressureForce">Força de pressió</option>
           <option value="viscosity">Canvi de velocitat per XSPH</option>
+          <option value="surface">Superfície</option>
         </select>
       </aside>
     </div>
@@ -116,7 +122,7 @@
       const energyDisplay = document.getElementById("energy");
       const colorModeSelect = document.getElementById("color-mode");
 
-      const sphSimulation = new SPHSimulation(canvas, ctx, 0.2);
+      const sphSimulation = new SPHSimulation(canvas, ctx, 1.2);
 
       function bindRange(inputId, outputId, property) {
         const input = document.getElementById(inputId);
@@ -136,11 +142,7 @@
       bindRange("viscosity", "viscosity-value", "XSPH_EPSILON");
       bindRange("rest-density", "rest-density-value", "REST_DENSITY");
       bindRange("stiffness", "stiffness-value", "K_STIFFNESS");
-      bindRange(
-        "surface-tension",
-        "surface-tension-value",
-        "SURFACE_TENSION_COEFFICIENT"
-      );
+      bindRange("surface-tension", "surface-tension-value", "SURFACE_TENSION_COEFFICIENT");
       bindRange("rebound", "rebound-value", "REBOUND_COEFF");
 
       colorModeSelect.addEventListener("change", () => {
@@ -161,7 +163,7 @@
         sphSimulation.draw();
 
         energyDisplay.textContent =
-          sphSimulation.getTotalKineticEnergy().toFixed(5);
+          sphSimulation.getTotalKineticEnergy().toFixed(0);
       }
 
       function mainLoop() {
