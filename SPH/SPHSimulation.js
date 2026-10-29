@@ -1,27 +1,26 @@
 class SPHSimulation{
-  constructor(canvas, ctx, viscositat = 0.2){
+  constructor(canvas, ctx, viscositat = 0.5){
     
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 1500;
+    this.AMOUNT_PARTICLES = 3000;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
     this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.005; // = 0.003
-    this.K_STIFFNESS = 1; //Només útil si es fa servir fórmula de pressió de Tait. = 2
+    this.REST_DENSITY = 0.015; // = 0.003
+    this.K_STIFFNESS = 100; //Fórmula de pressió de Tait i fórmula lineal. Tait = 2 //Lineal = 50.
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
-    this.K_STIFFNESS_LINEAR = 10; // Només útil si es fa servir fórmula de pressió lineal
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
-    this.SURFACE_TENSION_COEFFICIENT = 0.3;
+    this.SURFACE_TENSION_COEFFICIENT = 0.5;
 
-    this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
-    this.REBOUND_COEFF = 0.2;
+    this.VELOCITY_DAMPING = 0.995; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
+    this.REBOUND_COEFF = 0.5;
 
-    this.GRAVITY = new Vector2(0, 0.05);
+    this.GRAVITY = new Vector2(0, 0.5);
     this.GRAVITY_ENABLED = true;
-    this.useBoundaryParticles = true;
+    this.useBoundaryParticles = false;
 
     this.fluidHashGrid = new FluidHashGrid(this.INTERACTION_RADIUS);
 
@@ -45,8 +44,8 @@ class SPHSimulation{
   }
 
   instantiateParticles(){
-    let offsetBetweenParticles = 14;
-    let offsetAllParticles = new Vector2(this.INTERACTION_RADIUS, 14);
+    let offsetBetweenParticles = this.INTERACTION_RADIUS * 0.8;
+    let offsetAllParticles = new Vector2(this.INTERACTION_RADIUS, this.INTERACTION_RADIUS);
 
     let xparticles = Math.sqrt(this.AMOUNT_PARTICLES);
     let yparticles = xparticles;
@@ -64,23 +63,23 @@ class SPHSimulation{
 	instantiateBoundaryParticles(){
 		let offsetBetweenParticles = 6;
 		// paret inferior
-		for(let x=0; x<canvas.width; x+=offsetBetweenParticles){
-			this.particles.push(new SPHParticle(new Vector2(x,canvas.height)));
+		for(let x=0; x<this.canvas.width; x+=offsetBetweenParticles){
+			this.particles.push(new SPHParticle(new Vector2(x,this.canvas.height)));
 			this.particles[this.particles.length-1].isBoundary = true;
 		}
     // paret superior
-		for(let x=0; x<canvas.width; x+=offsetBetweenParticles){
+		for(let x=0; x<this.canvas.width; x+=offsetBetweenParticles){
 			this.particles.push(new SPHParticle(new Vector2(x,0)));
 			this.particles[this.particles.length-1].isBoundary = true;
 		}
 		// paret esquerra
-		for(let y=0; y<canvas.height; y+=offsetBetweenParticles){
+		for(let y=0; y<this.canvas.height; y+=offsetBetweenParticles){
 			this.particles.push(new SPHParticle(new Vector2(0,y)));
 			this.particles[this.particles.length-1].isBoundary = true;
 		}
 		// paret dreta
-		for(let y=0; y<canvas.height; y+=offsetBetweenParticles){
-			this.particles.push(new SPHParticle(new Vector2(canvas.width,y)));
+		for(let y=0; y<this.canvas.height; y+=offsetBetweenParticles){
+			this.particles.push(new SPHParticle(new Vector2(this.canvas.width,y)));
 			this.particles[this.particles.length-1].isBoundary = true;
 		}
 	}
@@ -118,8 +117,8 @@ class SPHSimulation{
       //console.log("Density of particle " + i + ": " + pi.density);
 
       //Calculem la pressió a partir de la densitat. Per fluids incompressibles un canvi de densitat petit ha de comportar un canvi molt gran de pressió, de forma que la densitat es mantindrà constant a la pràctica.
-      let pressure = (this.K_STIFFNESS * this.REST_DENSITY / this.GAMMA) * (Math.pow((pi.density / this.REST_DENSITY), this.GAMMA) - 1); // Si utilitzem l'equació de Tait (pàgina 42)
-      //let pressure = this.K_STIFFNESS_LINEAR * (pi.density - this.REST_DENSITY); // Si utilitzem l'equació lineal del Sebastian Lague i pàgina 44.
+      //let pressure = (this.K_STIFFNESS * this.REST_DENSITY / this.GAMMA) * (Math.pow((pi.density / this.REST_DENSITY), this.GAMMA) - 1); // Si utilitzem l'equació de Tait (pàgina 42)
+      let pressure = this.K_STIFFNESS * this.K_STIFFNESS * Math.max(0, (pi.density - this.REST_DENSITY)); // Si utilitzem l'equació lineal del Sebastian Lague i pàgina 44.
       pressure = Math.max(pressure, 0);
 			pi.pressure = pressure;
       //console.log("Pressure of particle " + i + ": " + pi.pressure);

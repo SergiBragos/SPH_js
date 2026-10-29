@@ -25,12 +25,13 @@
       canvas {
         display: block;
         border: solid 2px black;
+        background-color: #343330;
       }
 
       .panel {
         width: 260px;
         padding: 16px;
-        background: #343330;
+        background: #444340;
       }
 
       .panel h2 {
@@ -52,11 +53,13 @@
 
   <body>
     <div class="layout">
-      <canvas id="canvas" width="900" height="600"></canvas>
+      <canvas id="canvas" width="1200" height="900" background-color: lightgray></canvas>
 
       <aside class="panel">
         <h2>Mesures</h2>
-        <p>Energia: <output id="energy">0</output> unitats</p>
+        <p>Energia: <output id="energy">0</output> J</p>
+        <p>Partícules: <output id="particles">0</output></p>
+        <p>Densitat de repòs orientativa: <output id="avg-density">0</output></p>
 
         <h2>Controls</h2>
 
@@ -84,13 +87,13 @@
 
         <label>
           Densitat de repòs
-          <input id="rest-density" type="range" min="0.003" max="0.01" step="0.0005">
+          <input id="rest-density" type="range" min="0.001" max="0.03" step="0.0001">
           <output id="rest-density-value"></output>
         </label>
 
         <label>
           K stiffness
-          <input id="stiffness" type="range" min="0" max="20" step="0.5">
+          <input id="stiffness" type="range" min="2" max="200" step="1">
           <output id="stiffness-value"></output>
         </label>
 
@@ -130,10 +133,15 @@
       const ctx = canvas.getContext("2d");
 
       const energyDisplay = document.getElementById("energy");
+      const particlesDisplay = document.getElementById("particles");
+      const avgDensity = document.getElementById("avg-density");
       const colorModeSelect = document.getElementById("color-mode");
 
       const gravityInput = document.getElementById("gravity");
       const gravityOutput = document.getElementById("gravity-check");
+      
+      const sphSimulation = new SPHSimulation(canvas, ctx); //Inici de la simulació
+
 
       function updateGravityControl() {
         sphSimulation.GRAVITY_ENABLED = gravityInput.checked;
@@ -147,7 +155,6 @@
       updateGravityControl();
 
       const boundaryParticlesInput = document.getElementById("boundary-particles");
-
       const boundaryParticlesOutput = document.getElementById("boundary-particles-value");
 
       const resetButton = document.getElementById("reset-simulation");
@@ -161,14 +168,11 @@
       }
 
       boundaryParticlesInput.checked = sphSimulation.useBoundaryParticles;
-
       boundaryParticlesInput.addEventListener("change", updateBoundaryParticlesControl);
 
       resetButton.addEventListener("click", () => {sphSimulation.reset();});
 
       updateBoundaryParticlesControl();
-
-      const sphSimulation = new SPHSimulation(canvas, ctx, 0.2);
 
       function bindRange(inputId, outputId, property) {
         const input = document.getElementById(inputId);
@@ -208,8 +212,11 @@
         sphSimulation.update();
         sphSimulation.draw();
 
-        energyDisplay.textContent =
-          sphSimulation.getTotalKineticEnergy().toFixed(0);
+        energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/100).toFixed(2);
+        
+        particlesDisplay.textContent = sphSimulation.particles.length;
+        
+        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(4)
       }
 
       function mainLoop() {
