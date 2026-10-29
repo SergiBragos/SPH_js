@@ -4,19 +4,19 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 1600;
+    this.AMOUNT_PARTICLES = 3000;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
     this.INTERACTION_RADIUS = 20; // = 20
     this.REST_DENSITY = 0.005; // = 0.003
-    this.K_STIFFNESS = 2; //Només útil si es fa servir fórmula de pressió de Tait. = 2
+    this.K_STIFFNESS = 1; //Només útil si es fa servir fórmula de pressió de Tait. = 2
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.K_STIFFNESS_LINEAR = 10; // Només útil si es fa servir fórmula de pressió lineal
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
-    this.SURFACE_TENSION_COEFFICIENT = 0.2;
+    this.SURFACE_TENSION_COEFFICIENT = 0.3;
 
-    this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar.
+    this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
     this.REBOUND_COEFF = 0.2;
     //Més paràmetres que afegirem després
     this.GRAVITY = new Vector2(0, 0.05);
@@ -29,8 +29,8 @@ class SPHSimulation{
   }
 
   instantiateParticles(){
-    let offsetBetweenParticles = 14;
-    let offsetAllParticles = new Vector2(14, 50);
+    let offsetBetweenParticles = 10;
+    let offsetAllParticles = new Vector2(14, 14);
 
     let xparticles = Math.sqrt(this.AMOUNT_PARTICLES);
     let yparticles = xparticles;
