@@ -253,4 +253,14 @@ class SPHSimulation{
       }
     }
   }
+
+  getTotalKineticEnergy(){
+    let energy = 0;
+
+    for (const particle of this.particles) {
+      energy += 0.5 * particle.mass * particle.velocity.Length2();
+    }
+
+    return energy;
+  }
 }

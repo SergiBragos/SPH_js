@@ -1,18 +1,107 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>2D fluid simulations made easy:
-      A practical guide for developers.
-    </title>
+    <title>2D fluid simulations made easy</title>
+
     <style>
-      * {padding: 0; margin: 40;}
-      canvas {display: matrix; margin: 20px auto;}
-      body {background: #242321}
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #242321;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+
+      .layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 24px;
+      }
+
+      canvas {
+        display: block;
+        border: solid 2px black;
+      }
+
+      .panel {
+        width: 260px;
+        padding: 16px;
+        background: #343330;
+      }
+
+      .panel h2 {
+        margin-top: 0;
+      }
+
+      .panel label {
+        display: grid;
+        gap: 5px;
+        margin: 14px 0;
+      }
+
+      .panel input,
+      .panel select {
+        width: 100%;
+      }
     </style>
   </head>
-  
+
   <body>
-    <canvas id="canvas" width="1200px" height="900px" style="border: solid 2px black"></canvas>
+    <div class="layout">
+      <canvas id="canvas" width="900" height="600"></canvas>
+
+      <aside class="panel">
+        <h2>Mesures</h2>
+        <p>Energia: <output id="energy">0</output></p>
+
+        <h2>Controls</h2>
+
+        <label>
+          Viscositat
+          <input id="viscosity" type="range" min="0" max="2" step="0.01">
+          <output id="viscosity-value"></output>
+        </label>
+
+        <label>
+          Densitat de repòs
+          <input id="rest-density" type="range" min="0.001" max="0.01" step="0.0005">
+          <output id="rest-density-value"></output>
+        </label>
+
+        <label>
+          K stiffness
+          <input id="stiffness" type="range" min="0" max="20" step="0.1">
+          <output id="stiffness-value"></output>
+        </label>
+
+        <label>
+          Tensió superficial
+          <input id="surface-tension" type="range" min="0" max="2" step="0.01">
+          <output id="surface-tension-value"></output>
+        </label>
+
+        <label>
+          Rebot amb la paret
+          <input id="rebound" type="range" min="0" max="1" step="0.01">
+          <output id="rebound-value"></output>
+        </label>
+
+        <h2>Color de les partícules</h2>
+
+        <select id="color-mode">
+          <option value="surface">Superfície</option>
+          <option value="velocity">Velocitat</option>
+          <option value="density">Densitat</option>
+          <option value="pressureForce">Força de pressió</option>
+          <option value="viscosity">Canvi de velocitat per XSPH</option>
+        </select>
+      </aside>
+    </div>
+
     <script src="Kernel.js"></script>
     <script src="Vector2.js"></script>
     <script src="DrawUtils.js"></script>
@@ -21,34 +110,66 @@
     <script src="SPH/SPHSimulation.js"></script>
 
     <script>
-      var canvas = document.getElementById("canvas");
-      var ctx = canvas.getContext("2d");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
 
-      let sphSimulation = new SPHSimulation(canvas, ctx, 0.2);
-      //let sphSimulation = new PCISPHSimulation();
-      //let sphSimulation = new IISPHSimulation();
-      //let sphSimulation = new DFSPHSimulation();
-      //let sphSimulation = new PBFSimulation();
-      sphSimulation.update();
-      sphSimulation.draw();
+      const energyDisplay = document.getElementById("energy");
+      const colorModeSelect = document.getElementById("color-mode");
 
-      mainLoop();
+      const sphSimulation = new SPHSimulation(canvas, ctx, 0.2);
 
-      function updateSimulation(){
-        Clear();
-        sphSimulation.update();
-        sphSimulation.draw();
+      function bindRange(inputId, outputId, property) {
+        const input = document.getElementById(inputId);
+        const output = document.getElementById(outputId);
+
+        function applyValue() {
+          const value = Number(input.value);
+          sphSimulation[property] = value;
+          output.textContent = value;
+        }
+
+        input.value = sphSimulation[property];
+        input.addEventListener("input", applyValue);
+        applyValue();
       }
 
-      function mainLoop(){
-        window.requestAnimationFrame(mainLoop);
+      bindRange("viscosity", "viscosity-value", "XSPH_EPSILON");
+      bindRange("rest-density", "rest-density-value", "REST_DENSITY");
+      bindRange("stiffness", "stiffness-value", "K_STIFFNESS");
+      bindRange(
+        "surface-tension",
+        "surface-tension-value",
+        "SURFACE_TENSION_COEFFICIENT"
+      );
+      bindRange("rebound", "rebound-value", "REBOUND_COEFF");
+
+      colorModeSelect.addEventListener("change", () => {
+        sphSimulation.colorMode = colorModeSelect.value;
+      });
+
+      sphSimulation.colorMode = colorModeSelect.value;
+
+      function clearCanvas() {
+        ctx.fillStyle = "#242321";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function updateSimulation() {
+        clearCanvas();
+
+        sphSimulation.update();
+        sphSimulation.draw();
+
+        energyDisplay.textContent =
+          sphSimulation.getTotalKineticEnergy().toFixed(5);
+      }
+
+      function mainLoop() {
+        requestAnimationFrame(mainLoop);
         updateSimulation();
       }
 
-      function Clear(){
-        ctx.fillStyle = "#242321";
-        ctx.fillRect(0,0,canvas.width, canvas.height);
-      }
+      mainLoop();
     </script>
   </body>
 </html>
