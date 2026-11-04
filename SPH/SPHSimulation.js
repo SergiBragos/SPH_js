@@ -4,29 +4,29 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 3000;
+    this.AMOUNT_PARTICLES = 2700;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
-    this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.015; // = 0.003
-    this.K_STIFFNESS = 100; //Fórmula de pressió de Tait i fórmula lineal. Tait = 2 //Lineal = 50.
+    this.INTERACTION_RADIUS = 30; // = 20
+    this.REST_DENSITY = 0.012; // = 0.003
+    this.K_STIFFNESS = 1; //Fórmula de pressió de Tait i fórmula lineal. Tait = 2 //Lineal = 50.
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
     this.SURFACE_TENSION_COEFFICIENT = 0.5;
 
-    this.VELOCITY_DAMPING = 0.995; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
+    this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
     this.REBOUND_COEFF = 0.5;
 
-    this.GRAVITY = new Vector2(0, 0.5);
+    this.GRAVITY = new Vector2(0, 0.1);
     this.GRAVITY_ENABLED = true;
-    this.useBoundaryParticles = false;
+    this.useBoundaryParticles = true;
 
     this.fluidHashGrid = new FluidHashGrid(this.INTERACTION_RADIUS);
 
     this.reset();
 
-    this.colorMode = "viscosity"; // Mode de representació del color de la partícula. Opcions: 
+    this.colorMode = "velocity"; // Mode de representació del color de la partícula. Opcions: 
 
   }
 
@@ -44,7 +44,7 @@ class SPHSimulation{
   }
 
   instantiateParticles(){
-    let offsetBetweenParticles = this.INTERACTION_RADIUS * 0.8;
+    let offsetBetweenParticles = this.INTERACTION_RADIUS * 0.5;
     let offsetAllParticles = new Vector2(this.INTERACTION_RADIUS, this.INTERACTION_RADIUS);
 
     let xparticles = Math.sqrt(this.AMOUNT_PARTICLES);
@@ -52,7 +52,7 @@ class SPHSimulation{
 
     for(let x=0; x<xparticles; x++){
       for(let y=0; y<yparticles; y++){
-        let position = new Vector2(x*offsetBetweenParticles + offsetAllParticles.x, y*offsetBetweenParticles + offsetAllParticles.y);
+        let position = new Vector2(x*offsetBetweenParticles + offsetAllParticles.x + 0.1*this.INTERACTION_RADIUS*(Math.random()-0.5), y*offsetBetweenParticles + offsetAllParticles.y +0.1*this.INTERACTION_RADIUS*(Math.random()-0.5));
         this.particles.push(new SPHParticle(position)); //Creem una partícula a la llista a la posició inicial calculada
       }
     }
@@ -118,7 +118,8 @@ class SPHSimulation{
 
       //Calculem la pressió a partir de la densitat. Per fluids incompressibles un canvi de densitat petit ha de comportar un canvi molt gran de pressió, de forma que la densitat es mantindrà constant a la pràctica.
       //let pressure = (this.K_STIFFNESS * this.REST_DENSITY / this.GAMMA) * (Math.pow((pi.density / this.REST_DENSITY), this.GAMMA) - 1); // Si utilitzem l'equació de Tait (pàgina 42)
-      let pressure = this.K_STIFFNESS * this.K_STIFFNESS * Math.max(0, (pi.density - this.REST_DENSITY)); // Si utilitzem l'equació lineal del Sebastian Lague i pàgina 44.
+      let pressure = (this.K_STIFFNESS) * (Math.pow((pi.density / this.REST_DENSITY), this.GAMMA) - 1); // Si utilitzem l'equació de Tait modificada (pàgina 42 + vídeo on obvia la densitat i la gamma)
+      //let pressure = this.K_STIFFNESS * this.K_STIFFNESS * Math.max(0, (pi.density - this.REST_DENSITY)); // Si utilitzem l'equació lineal del Sebastian Lague i pàgina 44.
       pressure = Math.max(pressure, 0);
 			pi.pressure = pressure;
       //console.log("Pressure of particle " + i + ": " + pi.pressure);
@@ -180,11 +181,8 @@ class SPHSimulation{
 
   computeSurfaceTension() {
     for (const particle of this.particles) {
-      if (particle.surfaceNormal.Length2() > 0.0001) {
-        const surfaceTensionForce = Scale(
-          particle.surfaceNormal,
-          this.SURFACE_TENSION_COEFFICIENT
-        );
+      if (particle.surfaceNormal.Length2() > 0.00001) {
+        const surfaceTensionForce = Scale(particle.surfaceNormal, this.SURFACE_TENSION_COEFFICIENT);
 
         particle.force = Add(particle.force, surfaceTensionForce);
       }

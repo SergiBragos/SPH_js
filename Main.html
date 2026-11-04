@@ -81,31 +81,31 @@
 
         <label>
           Viscositat
-          <input id="viscosity" type="range" min="0" max="2" step="0.01">
+          <input id="viscosity" type="range" min="0" max="1.4" step="0.01">
           <output id="viscosity-value"></output>
         </label>
 
         <label>
           Densitat de repòs
-          <input id="rest-density" type="range" min="0.001" max="0.03" step="0.0001">
+          <input id="rest-density" type="range" min="0.000" max="0.03" step="0.001">
           <output id="rest-density-value"></output>
         </label>
 
         <label>
-          K stiffness
-          <input id="stiffness" type="range" min="2" max="200" step="1">
+          Força de pressió
+          <input id="stiffness" type="range" min="0" max="10" step="0.1">
           <output id="stiffness-value"></output>
         </label>
 
         <label>
           Tensió superficial
-          <input id="surface-tension" type="range" min="0" max="2" step="0.01">
+          <input id="surface-tension" type="range" min="0" max="2" step="0.1">
           <output id="surface-tension-value"></output>
         </label>
 
         <label>
           Rebot amb la paret
-          <input id="rebound" type="range" min="0" max="1" step="0.01">
+          <input id="rebound" type="range" min="0.01" max="1" step="0.01">
           <output id="rebound-value"></output>
         </label>
 
@@ -216,7 +216,7 @@
         
         particlesDisplay.textContent = sphSimulation.particles.length;
         
-        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(4)
+        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(5)
       }
 
       function mainLoop() {
