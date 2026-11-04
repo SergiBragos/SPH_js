@@ -63,6 +63,13 @@
 
         <h2>Controls</h2>
 
+        <label>
+          Pas temporal
+          <input id="delta-time" type="range"
+                min="0.001" max="0.1" step="0.001">
+          <output id="delta-time-value"></output>
+        </label>
+
         <button id="reset-simulation" type="button">
           Reinicia la simulació
         </button>
@@ -81,13 +88,13 @@
 
         <label>
           Viscositat
-          <input id="viscosity" type="range" min="0" max="1.4" step="0.01">
+          <input id="viscosity" type="range" min="0" max="2" step="0.1">
           <output id="viscosity-value"></output>
         </label>
 
         <label>
           Densitat de repòs
-          <input id="rest-density" type="range" min="0.000" max="0.03" step="0.001">
+          <input id="rest-density" type="range" min="0.001" max="0.03" step="0.0001">
           <output id="rest-density-value"></output>
         </label>
 
@@ -189,6 +196,7 @@
         applyValue();
       }
 
+      bindRange("delta-time", "delta-time-value", "DELTA_TIME");
       bindRange("viscosity", "viscosity-value", "XSPH_EPSILON");
       bindRange("rest-density", "rest-density-value", "REST_DENSITY");
       bindRange("stiffness", "stiffness-value", "K_STIFFNESS");
@@ -216,7 +224,7 @@
         
         particlesDisplay.textContent = sphSimulation.particles.length;
         
-        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(5)
+        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(4)
       }
 
       function mainLoop() {

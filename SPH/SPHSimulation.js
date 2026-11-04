@@ -4,7 +4,7 @@ class SPHSimulation{
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 2700;
+    this.AMOUNT_PARTICLES = 2000;
     this.DELTA_TIME = 0.1;
 
     //Propietats de les partícules
@@ -20,7 +20,7 @@ class SPHSimulation{
 
     this.GRAVITY = new Vector2(0, 0.1);
     this.GRAVITY_ENABLED = true;
-    this.useBoundaryParticles = true;
+    this.useBoundaryParticles = false;
 
     this.fluidHashGrid = new FluidHashGrid(this.INTERACTION_RADIUS);
 
@@ -281,7 +281,7 @@ class SPHSimulation{
   }
 
   isSurfaceParticle(particle) {
-    return particle.surfaceNormal.Length2() > 0.0001;
+    return particle.surfaceNormal.Length2() > 0.00001;
   }
 
   getHeatColor(value, minValue, maxValue) {
