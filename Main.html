@@ -29,7 +29,7 @@
       }
 
       .panel {
-        width: 260px;
+        width: 300px;
         padding: 16px;
         background: #444340;
       }
@@ -47,6 +47,7 @@
       .panel input,
       .panel select {
         width: 100%;
+        margin-bottom: 10px;
       }
     </style>
   </head>
@@ -55,12 +56,7 @@
     <div class="layout">
       <canvas id="canvas" width="1200" height="900" background-color: lightgray></canvas>
 
-      <aside class="panel">
-        <h2>Mesures</h2>
-        <p>Energia: <output id="energy">0</output> J</p>
-        <p>Partícules: <output id="particles">0</output></p>
-        <p>Densitat de repòs orientativa: <output id="avg-density">0</output></p>
-
+      <aside class = "panel">
         <h2>Controls</h2>
 
         <label>
@@ -68,6 +64,12 @@
           <input id="delta-time" type="range"
                 min="0.001" max="0.1" step="0.001">
           <output id="delta-time-value"></output>
+        </label>
+
+        <label>
+          Nombre de partícules
+          <input id="number-particles" type="range" min="100" max="3000" step="100">
+          <output id="number-particles-value"></output>
         </label>
 
         <button id="reset-simulation" type="button">
@@ -94,7 +96,7 @@
 
         <label>
           Densitat de repòs
-          <input id="rest-density" type="range" min="0.001" max="0.03" step="0.0001">
+          <input id="rest-density" type="range" min="0.0" max="0.03" step="0.0001">
           <output id="rest-density-value"></output>
         </label>
 
@@ -102,6 +104,12 @@
           Força de pressió
           <input id="stiffness" type="range" min="0" max="10" step="0.1">
           <output id="stiffness-value"></output>
+          
+          Funció de càlcul de pressió
+          <select id="pressure-function">
+            <option value="Tait">Tait</option>
+            <option value="Linear">Linear</option>
+          </select>
         </label>
 
         <label>
@@ -115,6 +123,16 @@
           <input id="rebound" type="range" min="0.01" max="1" step="0.01">
           <output id="rebound-value"></output>
         </label>
+    
+      </aside>
+
+      <aside class="panel">
+
+        <h2>Mesures</h2>
+        
+        <p>Energia: <output id="energy">0</output> J</p>
+        <p>Partícules: <output id="particles">0</output></p>
+        <p>Densitat de repòs orientativa: <output id="avg-density">0</output></p>
 
         <h2>Color de les partícules</h2>
 
@@ -126,6 +144,7 @@
           <option value="surface">Superfície</option>
         </select>
       </aside>
+
     </div>
 
     <script src="Kernel.js"></script>
@@ -143,6 +162,9 @@
       const particlesDisplay = document.getElementById("particles");
       const avgDensity = document.getElementById("avg-density");
       const colorModeSelect = document.getElementById("color-mode");
+      const pressureFunction = document.getElementById("pressure-function");
+      const numberParticlesInput = document.getElementById("number-particles");
+      const numberParticlesOutput = document.getElementById("number-particles-value");
 
       const gravityInput = document.getElementById("gravity");
       const gravityOutput = document.getElementById("gravity-check");
@@ -171,8 +193,8 @@
 
         boundaryParticlesOutput.textContent = boundaryParticlesInput.checked
           ? "Activades en reiniciar"
-          : "Desactivades en reiniciar";
-      }
+          : "Desactivades en reiniciar"
+      };
 
       boundaryParticlesInput.checked = sphSimulation.useBoundaryParticles;
       boundaryParticlesInput.addEventListener("change", updateBoundaryParticlesControl);
@@ -206,8 +228,16 @@
       colorModeSelect.addEventListener("change", () => {
         sphSimulation.colorMode = colorModeSelect.value;
       });
+      
+      pressureFunction.addEventListener("change", () => {
+        sphSimulation.pressureFunction = pressureFunction.value;
+      });
 
-      sphSimulation.colorMode = colorModeSelect.value;
+      numberParticlesInput.addEventListener("change", () => {
+        const amount = Number(numberParticlesInput.value);
+        sphSimulation.AMOUNT_PARTICLES = amount;
+        numberParticlesOutput.textContent = amount;
+      });
 
       function clearCanvas() {
         ctx.fillStyle = "#242321";
@@ -220,7 +250,7 @@
         sphSimulation.update();
         sphSimulation.draw();
 
-        energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/100).toFixed(2);
+        energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/10000).toFixed(2);
         
         particlesDisplay.textContent = sphSimulation.particles.length;
         
