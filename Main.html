@@ -61,8 +61,7 @@
 
         <label>
           Pas temporal
-          <input id="delta-time" type="range"
-                min="0.001" max="0.1" step="0.001">
+          <input id="delta-time" type="range" min="0.001" max="0.1" step="0.001">
           <output id="delta-time-value"></output>
         </label>
 
@@ -247,9 +246,9 @@
       function drawSimulation(){
         clearCanvas();
         sphSimulation.draw();
-        particlesDisplay.textContent = Number(numberParticlesInput);
-        avgDensity.textContent = (Number(particlesDisplay.textContent) * 1 / (canvas.height * canvas.width)).toFixed(4);
+        particlesDisplay.textContent = sphSimulation.particles.length;
         energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/10000).toFixed(2);
+        avgDensity.textContent = (particlesDisplay.textContent / (Number(canvas.height) * Number(canvas.width))).toFixed(4);
       }
 
       let framesToDraw = 0;
