@@ -248,7 +248,7 @@
         sphSimulation.draw();
         particlesDisplay.textContent = sphSimulation.particles.length;
         energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/10000).toFixed(2);
-        avgDensity.textContent = (particlesDisplay.textContent / (Number(canvas.height) * Number(canvas.width))).toFixed(4);
+        avgDensity.textContent = (particlesDisplay.textContent * sphSimulation.particles[0].mass / (Number(canvas.height) * Number(canvas.width))).toFixed(4);
       }
 
       let framesToDraw = 0;
