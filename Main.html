@@ -160,23 +160,20 @@
 
       const energyDisplay = document.getElementById("energy");
       const particlesDisplay = document.getElementById("particles");
+      const numberParticlesInput = document.getElementById("number-particles");
+      const numberParticlesOutput = document.getElementById("number-particles-value");
       const avgDensity = document.getElementById("avg-density");
       const colorModeSelect = document.getElementById("color-mode");
       const pressureFunction = document.getElementById("pressure-function");
-      const numberParticlesInput = document.getElementById("number-particles");
-      const numberParticlesOutput = document.getElementById("number-particles-value");
-
+      
       const gravityInput = document.getElementById("gravity");
       const gravityOutput = document.getElementById("gravity-check");
       
       const sphSimulation = new SPHSimulation(canvas, ctx); //Inici de la simulació
 
-
       function updateGravityControl() {
         sphSimulation.GRAVITY_ENABLED = gravityInput.checked;
-        gravityOutput.textContent = gravityInput.checked
-          ? "Activada"
-          : "Desactivada";
+        gravityOutput.textContent = gravityInput.checked ? "Activada" : "Desactivada";
       }
 
       gravityInput.checked = sphSimulation.GRAVITY_ENABLED;
@@ -191,9 +188,7 @@
       function updateBoundaryParticlesControl() {
         sphSimulation.useBoundaryParticles = boundaryParticlesInput.checked;
 
-        boundaryParticlesOutput.textContent = boundaryParticlesInput.checked
-          ? "Activades en reiniciar"
-          : "Desactivades en reiniciar"
+        boundaryParticlesOutput.textContent = boundaryParticlesInput.checked ? "Activades en reiniciar" : "Desactivades en reiniciar"
       };
 
       boundaryParticlesInput.checked = sphSimulation.useBoundaryParticles;
@@ -218,6 +213,7 @@
         applyValue();
       }
 
+      bindRange("number-particles", "number-particles-value", "AMOUNT_PARTICLES");
       bindRange("delta-time", "delta-time-value", "DELTA_TIME");
       bindRange("viscosity", "viscosity-value", "XSPH_EPSILON");
       bindRange("rest-density", "rest-density-value", "REST_DENSITY");
@@ -245,21 +241,28 @@
       }
 
       function updateSimulation() {
-        clearCanvas();
-
         sphSimulation.update();
-        sphSimulation.draw();
-
-        energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/10000).toFixed(2);
-        
-        particlesDisplay.textContent = sphSimulation.particles.length;
-        
-        avgDensity.textContent = (sphSimulation.particles.length * sphSimulation.particles[0].mass / (canvas.height * canvas.width)).toFixed(4)
       }
+
+      function drawSimulation(){
+        clearCanvas();
+        sphSimulation.draw();
+        particlesDisplay.textContent = Number(numberParticlesInput);
+        avgDensity.textContent = (Number(particlesDisplay.textContent) * 1 / (canvas.height * canvas.width)).toFixed(4);
+        energyDisplay.textContent = (sphSimulation.getTotalKineticEnergy()/10000).toFixed(2);
+      }
+
+      let framesToDraw = 0;
 
       function mainLoop() {
         requestAnimationFrame(mainLoop);
         updateSimulation();
+        if(framesToDraw >= 0.1/sphSimulation.DELTA_TIME){
+          sphSimulation.updateParticleColors();
+          drawSimulation();
+          framesToDraw = 0;
+        }
+        framesToDraw += 1;
       }
 
       mainLoop();

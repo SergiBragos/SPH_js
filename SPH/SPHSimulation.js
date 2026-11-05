@@ -5,11 +5,11 @@ class SPHSimulation{
     this.ctx = ctx;
     this.particles = []
     this.AMOUNT_PARTICLES = 2500;
-    this.DELTA_TIME = 0.1;
+    this.DELTA_TIME = 0.05;
 
     //Propietats de les partícules
     this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.012; // = 0.003
+    this.REST_DENSITY = 0.01; // = 0.003
     this.K_STIFFNESS = 1; //Fórmula de pressió de Tait i fórmula lineal. Tait = 2 //Lineal = 50.
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
@@ -94,7 +94,7 @@ class SPHSimulation{
     this.applyXSPH(); //Calculem la força de viscositat per diferències de velocitat.
     this.integrate(); //Calculem les noves velocitats i posicions de les partícules.
     this.worldBoundary(); //Calculem rebots amb les parets.
-    this.updateParticleColors(); //Calculem els colors de les partícules segons la categoria seleccionada.
+    //this.updateParticleColors(); //Calculem els colors de les partícules segons la categoria seleccionada.
     //Després de totes aquestes sub-funcions es crida la funció draw des del main. Draw només agafa les posicions noves de les partícules.
   }
 
@@ -188,7 +188,7 @@ class SPHSimulation{
 
   computeSurfaceTension() {
     for (const particle of this.particles) {
-      if (particle.surfaceNormal.Length2() > 0.00001) {
+      if (particle.surfaceNormal.Length2() > 0.0001) {
         const surfaceTensionForce = Scale(particle.surfaceNormal, this.SURFACE_TENSION_COEFFICIENT);
 
         particle.force = Add(particle.force, surfaceTensionForce);
@@ -288,7 +288,7 @@ class SPHSimulation{
   }
 
   isSurfaceParticle(particle) {
-    return particle.surfaceNormal.Length2() > 0.00001;
+    return particle.surfaceNormal.Length2() > 0.0001;
   }
 
   getHeatColor(value, minValue, maxValue) {
