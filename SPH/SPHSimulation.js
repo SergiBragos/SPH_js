@@ -1,15 +1,15 @@
 class SPHSimulation{
-  constructor(canvas, ctx, viscositat = 0.5){
+  constructor(canvas, ctx, viscositat = 0.2){
     
     this.canvas = canvas;
     this.ctx = ctx;
     this.particles = []
-    this.AMOUNT_PARTICLES = 2500;
+    this.AMOUNT_PARTICLES = 2000;
     this.DELTA_TIME = 0.05;
 
     //Propietats de les partícules
-    this.INTERACTION_RADIUS = 20; // = 20
-    this.REST_DENSITY = 0.01; // = 0.003
+    this.INTERACTION_RADIUS = 30; // = 20
+    this.REST_DENSITY = 0.005; // = 0.003
     this.K_STIFFNESS = 1; //Fórmula de pressió de Tait i fórmula lineal. Tait = 2 //Lineal = 50.
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
