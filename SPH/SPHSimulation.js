@@ -14,6 +14,7 @@ class SPHSimulation{
     this.GAMMA = 7; //Només útil si es fa servir fórmula de pressió de Tait. = 7
     this.XSPH_EPSILON = viscositat; //Coeficient de viscositat. = 0.2
     this.SURFACE_TENSION_COEFFICIENT = 1;
+    this.LLINDAR_SUPERFICIE = 0.00001;
 
     this.VELOCITY_DAMPING = 1; //Paràmetre que resta velocitat al càlcul per extreure energia al sistema. Mantenir a 1 si es vol ignorar. A vegades un 0.995 li pot donar estabilitat i no explota.
     this.REBOUND_COEFF = 0.5;
@@ -188,7 +189,7 @@ class SPHSimulation{
 
   computeSurfaceTension() {
     for (const particle of this.particles) {
-      if (particle.surfaceNormal.Length2() > 0.0001) {
+      if (particle.surfaceNormal.Length2() > this.LLINDAR_SUPERFICIE) {
         const surfaceTensionForce = Scale(particle.surfaceNormal, this.SURFACE_TENSION_COEFFICIENT);
 
         particle.force = Add(particle.force, surfaceTensionForce);
@@ -288,7 +289,7 @@ class SPHSimulation{
   }
 
   isSurfaceParticle(particle) {
-    return particle.surfaceNormal.Length2() > 0.0001;
+    return particle.surfaceNormal.Length2() > this.LLINDAR_SUPERFICIE;
   }
 
   getHeatColor(value, minValue, maxValue) {
